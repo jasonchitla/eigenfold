@@ -16,3 +16,11 @@ dx = −1/2Hxdt + dw
 x are the coordinates of the alpha carbons and H is chosen such that undesired, chemically implausible structures have high energy E(x):
 
 <img width="268" alt="image" src="https://github.com/jasonchitla/eigenfold/assets/3611926/bbf836e5-6333-43e1-9b5d-aa40ca7baf21">
+
+To enforce a RMS distance of 3.8 Å between adjacent alpha carbons:
+
+<img width="194" alt="image" src="https://github.com/jasonchitla/eigenfold/assets/3611926/da2ebb7c-a5e3-4bf8-be0b-95d7f602313b">
+
+
+
+
