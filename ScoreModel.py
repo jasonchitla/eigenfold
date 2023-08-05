@@ -64,9 +64,11 @@ class ConvLayer(torch.nn.Module):
         return out
 
 class ScoreModel(torch.nn.Module):
-    def __init__(self, embed_dims, num_conv_layers, position_embed_dims):
+    def __init__(self, embed_dims, num_conv_layers, position_embed_dims, tmin, tmax):
         super(ScoreModel, self).__init__()
 
+        self.tmin = tmin
+        self.tmax = tmax
         self.position_embed_dims = position_embed_dims
         self.embed_node_func = (lambda x : sinusoidal_embedding(x, embed_dims, max_positions=10000))
         """ Each spherical harmonic is associated with a degree 'l' (non-negative integer)
@@ -77,22 +79,22 @@ class ScoreModel(torch.nn.Module):
         self.spherical_harmonics_irreps = o3.Irreps.spherical_harmonics(lmax=2)
         
         node_dims = 256
-        bottleneck_dims = 32
+        self.bottleneck_dims = 32
         self.node_embedding_transform = nn.Sequential(
-            nn.Linear(embed_dims + node_dims, bottleneck_dims),
+            nn.Linear(embed_dims + node_dims, self.bottleneck_dims),
             nn.ReLU(),
-            nn.Linear(bottleneck_dims, bottleneck_dims),
+            nn.Linear(self.bottleneck_dims, self.bottleneck_dims),
             nn.ReLU(),
-            nn.Linear(bottleneck_dims, bottleneck_dims)
+            nn.Linear(self.bottleneck_dims, self.bottleneck_dims)
         )
         edge_dims = 128
         num_gaussians = 50
         self.edge_embedding_transform = nn.Sequential(
-            nn.Linear(embed_dims + num_gaussians + self.position_embed_dims + 2 * edge_dims, bottleneck_dims),
+            nn.Linear(embed_dims + num_gaussians + self.position_embed_dims + 2 * edge_dims, self.bottleneck_dims),
             nn.ReLU(),
-            nn.Linear(bottleneck_dims, bottleneck_dims),
+            nn.Linear(self.bottleneck_dims, self.bottleneck_dims),
             nn.ReLU(),
-            nn.Linear(bottleneck_dims, bottleneck_dims)
+            nn.Linear(self.bottleneck_dims, self.bottleneck_dims)
         )
         self.node_norm = nn.LayerNorm(node_dims)
         self.edge_norm = nn.LayerNorm(2 * edge_dims)
@@ -113,7 +115,7 @@ class ScoreModel(torch.nn.Module):
         
         # as we add more layers, more complex spherical harmonics are considered
         for i in range(num_conv_layers):
-            ns = bottleneck_dims
+            ns = self.bottleneck_dims
             nv = 4
             ntps = 16
             ntpv = 4
@@ -136,3 +138,50 @@ class ScoreModel(torch.nn.Module):
         # need paths that lead to irreps specified in 1x1o + 1x1e
         self.final_tensor_product = o3.FullyConnectedTensorProduct(out_irreps, out_irreps, '1x1o + 1x1e', internal_weights=True)
 
+    def forward(self, data):
+        data['resi'].x = self.node_norm(data['resi'].node_data)
+        data['resi'].edge_data = self.edge_norm(data['resi'].edge_data_extended)
+            
+        node_data, edge_index, edge_data, edge_spherical_harmonics = self.build_conv_graph(data)
+        node_data = self.node_embedding_transform(node_data)
+        edge_data = self.edge_embedding_transform(edge_data)
+        source, dest = edge_index
+        
+        for layer in self.conv_layers:
+            ns = self.bottleneck_dims
+            edge_data_extended = torch.cat([edge_data, node_data[source, :ns], node_data[dest, :ns]], -1)
+            node_data = layer(node_data, edge_index, edge_data_extended, edge_spherical_harmonics)
+    
+        out = self.final_tensor_product(node_data, node_data)
+        out = out.view(-1, 2, 3).mean(1)    
+
+        try: out = out * data.score_norm[:,None]
+        except: out = out * data.score_norm
+        
+        data['resi'].pred = out
+        data.pred = out
+        return out
+    
+    
+    def build_conv_graph(self, data):
+        edge_index, edge_data = data['resi'].edge_index, data['resi'].edge_data
+            
+        node_t = torch.log(data['resi'].node_t / self.tmin) / np.log(self.tmax / self.tmin) * 10000
+        node_t_emb = self.embed_node_func(node_t)
+        node_data = torch.cat([node_t_emb, data['resi'].x], 1)
+        
+        edge_t_emb = node_t_emb[edge_index[0].long()]
+        edge_data = torch.cat([edge_t_emb, edge_data], 1)
+        source, dest = edge_index
+
+        edge_pos_emb = sinusoidal_embedding(dest - source, self.position_embed_dims)
+        edge_data = torch.cat([edge_pos_emb, edge_data], 1)
+        edge_vec = data['resi'].pos[source.long()] - data['resi'].pos[dest.long()]
+        edge_length_emb = self.distance_expansion(edge_vec.norm(dim=-1)**0.5)
+        
+        edge_data = torch.cat([edge_length_emb, edge_data], 1)
+
+        edge_spherical_harmonics = o3.spherical_harmonics(self.spherical_harmonics_irreps, edge_vec, normalize=True, normalization='component').float()
+        return node_data, edge_index, edge_data, edge_spherical_harmonics
+    
+ 
