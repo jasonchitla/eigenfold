@@ -6,6 +6,7 @@ from torch_geometric.loader import DataLoader
 from .utils import get_logger
 logger = get_logger(__name__)
 from .pdb.pdb import pdb_to_npy
+from .diffusion import ForwardDiffusionKernel
 
 class ResidueDataset(Dataset):
     def __init__(self, split, inference_mode=False, **kwargs):
