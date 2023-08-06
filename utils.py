@@ -1,5 +1,9 @@
 import math, torch
 from torch.nn import functional as F
+import logging, socket
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import gaussian_filter1d
 
 def sinusoidal_embedding(timesteps, embedding_dim, max_positions=10000):
     """ from https://github.com/hojonathanho/diffusion/blob/master/diffusion_tf/nn.py   """
@@ -24,3 +28,35 @@ class GaussianSmearing(torch.nn.Module):
     def forward(self, dist):
         dist = dist.view(-1, 1) - self.offset.view(1, -1)
         return torch.exp(self.coeff * torch.pow(dist, 2)).float()
+
+def get_logger(name, level='info'):
+    logger = logging.Logger(name)
+    level = {
+        'crititical': 50,
+        'error': 40,
+        'warning': 30,
+        'info': 20,
+        'debug': 10
+    }[level]
+    logger.setLevel(level)
+    
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(f'%(asctime)s [{socket.gethostname()}:%(process)d] [%(levelname)s] %(message)s') 
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    return logger
+
+def save_loss_plot(log, path):
+    x = np.array(log['rmsd'])
+    y1 = np.array(log['loss'])
+    y2 = np.array(log['base_loss'])
+    order = np.argsort(x)
+    x, y1, y2 = x[order], y1[order], y2[order]
+    plt.scatter(x, y1, c='blue')
+    plt.scatter(x, y2, c='orange')
+    plt.plot(x, gaussian_filter1d(y1, 1), c='blue')
+    plt.plot(x, gaussian_filter1d(y2, 1), c='orange')
+    plt.ylim(bottom=0)
+    plt.savefig(path)
+    plt.clf()
