@@ -14,7 +14,7 @@ def PROCESS_RESIDUES(d):
     d = {key: val for key, val in d.items() if seq1(key) != 'X'}
     for key in d:
         atoms = d[key]['atoms']
-        d[key] = {'CA': 'C'} | {key: val['symbol'] for key, val in atoms.items() if val['symbol'] != 'H' and key != 'CA'}
+        d[key] = {**{'CA': 'C'}, **{key: val['symbol'] for key, val in atoms.items() if val['symbol'] != 'H' and key != 'CA'}}
     return d
     
 RESIDUES = PROCESS_RESIDUES(RESIDUES)
