@@ -8,19 +8,14 @@ from .train_utils import get_optimizer, get_scheduler, epoch
 logger = get_logger(__name__)
 
 time_id = int(time.time()*1000)
-
-def wandb_init():
-    wandb.login(key=os.environ['WANDB_API_KEY'])
-    wandb.init(
-        entity=os.environ['WANDB_ENTITY'],
-        settings=wandb.Settings(start_method="fork"),
-        project='harmonic-diffusion',
-        name=str(time_id)
-    )
     
 def main():
     logger.info(f'Initializing run with ID {time_id}')
-    wandb_init()
+    wandb.init(
+        settings=wandb.Settings(start_method="fork"),
+        project='harmonic-diffusion-antibodies',
+        name=str(time_id)
+    )
 
     logger.info(f'Loading splits')
     splits = pd.read_csv('./splits/limit256.csv')
