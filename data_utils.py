@@ -3,11 +3,11 @@ import numpy as np
 import torch, os
 from torch_geometric.data import Dataset, HeteroData
 from torch_geometric.loader import DataLoader
-from .utils import get_logger
+from utils import get_logger
 logger = get_logger(__name__)
-from .pdb.pdb import pdb_to_npy
-from .diffusion import ForwardDiffusionKernel
-from .sde.sde import PolymerSDE
+from pdb_utils.pdb import pdb_to_npy
+from diffusion import ForwardDiffusionKernel
+from sde.sde import PolymerSDE
 
 class ResidueDataset(Dataset):
     def __init__(self, split, inference_mode=False, **kwargs):

@@ -3,7 +3,7 @@ import numpy as np
 from torch import nn
 from torch.nn import functional as F
 from torch_scatter import scatter, scatter_max
-from .utils import sinusoidal_embedding, GaussianSmearing
+from utils import sinusoidal_embedding, GaussianSmearing
 from e3nn import o3
 from e3nn.nn import BatchNorm
 

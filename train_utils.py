@@ -1,7 +1,7 @@
 import torch, wandb
 import numpy as np
 from tqdm import tqdm
-from .utils import get_logger
+from utils import get_logger
 logger = get_logger(__name__)
 
 def loss_func(data):

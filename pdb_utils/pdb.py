@@ -6,7 +6,7 @@ from Bio.PDB.PDBExceptions import PDBConstructionWarning
 parser = PDBParser()
 from utils import get_logger
 logger = get_logger(__name__)
-from .protein_residues import normal as RESIDUES
+from protein_residues import normal as RESIDUES
 from Bio.SeqUtils import seq1, seq3
 
 def PROCESS_RESIDUES(d):

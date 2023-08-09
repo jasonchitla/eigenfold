@@ -1,10 +1,10 @@
 import os, torch, wandb, time
 import numpy as np
 import pandas as pd
-from .score_model import ScoreModel
-from .data_utils import get_loader
-from .utils import get_logger, save_loss_plot
-from .train_utils import get_optimizer, get_scheduler, epoch
+from score_model import ScoreModel
+from data_utils import get_loader
+from utils import get_logger, save_loss_plot
+from train_utils import get_optimizer, get_scheduler, epoch
 logger = get_logger(__name__)
 
 time_id = int(time.time()*1000)
