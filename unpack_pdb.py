@@ -27,6 +27,7 @@ def main():
     else:
         __map__ = map
     infos = list(tqdm.tqdm(__map__(unpack_pdb, manifest), total=len(manifest)))
+    infos = [x for x in infos if x]
     if args.num_workers > 1:
         p.__exit__(None, None, None)
     info = []
@@ -54,8 +55,7 @@ def unpack_pdb(pdb_id):
             model = struct[0]
             header = struct.header
         except Exception as e:
-            raise e
-            if type(e) is KeyboardInterrupt: raise e
+            print("empty file")
             return []
         
     seqres = {}
