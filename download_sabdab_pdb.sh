@@ -5,6 +5,5 @@ PDB_IDS=("7vv3" "7sqw" "5xli" "7t0g" "6a76" "4ocx" "5i19" "7ydh" "5uby" "7rku" "
 
 for pdb_id in "${PDB_IDS[@]}"
 do
-    first_two_chars=${pdb_id:0:2}
-    rsync --recursive --links --perms --times --compress --info=progress2 --delete --port=33444 rsync.rcsb.org::ftp_data/structures/divided/pdb/$first_two_chars/ $DESTINATION
+    wget -O "$DESTINATION/$pdb_id.pdb" https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabdab/pdb/$pdb_id/?raw=true
 done
