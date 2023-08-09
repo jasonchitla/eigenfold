@@ -8,9 +8,8 @@ def preprocess():
     df = df[df.saved]; del df['saved']
     df = df[(df.seqlen >= 20) & (df.seqlen <= 256)]
     df = df[df.release_date < '2020-12-01']
-    df['split'] = np.where(df.release_date < '2020-05-01', 'train', 'val')
     # Randomly shuffle the dataframe
-    df = df.sample(frac=1).reset_index(drop=True)
+    df = df.sample(frac=1)
 
     # Define the split points
     train_idx = int(0.8 * len(df))
