@@ -8,17 +8,20 @@ def preprocess():
     df = df[df.saved]; del df['saved']
     df = df[(df.seqlen >= 20) & (df.seqlen <= 256)]
     df = df[df.release_date < '2020-12-01']
-    # Randomly shuffle the dataframe
-    df = df.sample(frac=1)
+    # Randomly shuffle the dataframe without resetting index
+    shuffled_df = df.sample(frac=1)
 
-    # Define the split points
+    # Determine split indices based on the desired percentages
     train_idx = int(0.8 * len(df))
-    val_idx = int(0.9 * len(df))  # This is also equal to train_idx + 0.1 * len(df)
+    val_idx = int(0.9 * len(df))
 
-    # Assign 'train', 'val', and 'test'
-    df['split'] = 'train'
-    df.loc[train_idx:val_idx, 'split'] = 'val'
-    df.loc[val_idx:, 'split'] = 'test'
+    # Get the shuffled indices
+    shuffled_indices = shuffled_df.index.tolist()
+
+    # Assign 'train', 'val', and 'test' based on the shuffled indices
+    df.loc[shuffled_indices[:train_idx], 'split'] = 'train'
+    df.loc[shuffled_indices[train_idx:val_idx], 'split'] = 'val'
+    df.loc[shuffled_indices[val_idx:], 'split'] = 'test'
 
     # Count the number of 'train', 'val', and 'test' entries
     train_count = (df['split'] == 'train').sum()
