@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from schedule import EntropySchedule
+from .schedule import EntropySchedule
 
 FLOAT_TYPE = np.float32
 
