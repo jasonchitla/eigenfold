@@ -15,7 +15,7 @@ def get_scheduler(optimizer):
     decay = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1., end_factor=1.0, total_iters=500000)
     return torch.optim.lr_scheduler.SequentialLR(optimizer, schedulers=[warmup, constant, decay], milestones=[10000, 110000])
     
-def epoch(model, loader, optimizer=None, scheduler=None, device='cpu', print_freq=1000):
+def epoch(model, loader, optimizer=None, scheduler=None, scaler=None, device='cpu', print_freq=1000):
     if optimizer is not None: model.train()
     else: model.eval()
     
@@ -26,7 +26,7 @@ def epoch(model, loader, optimizer=None, scheduler=None, device='cpu', print_fre
             if data.skip:
                 logger.warning(f"Skipping batch")
                 continue
-            data, loss, base_loss = iter_(model, data, optimizer)
+            data, loss, base_loss = iter_(model, data, optimizer, scaler)
             if scheduler: scheduler.step()
             
             with torch.no_grad():
@@ -66,12 +66,13 @@ def epoch(model, loader, optimizer=None, scheduler=None, device='cpu', print_fre
     return log
 
 
-def iter_(model, data, optimizer):
+def iter_(model, data, optimizer, scaler):
     if optimizer is not None:
         model.zero_grad()
-        pred = model(data)
-        loss, base_loss = loss_func(data)
-        loss.backward()
+        with torch.cuda.amp.autocast(dtype=torch.bfloat16):
+            pred = model(data)
+            loss, base_loss = loss_func(data)
+        scaler.scale(loss).backward()
         if not np.isfinite(loss.item()):
             logger.warning(f"Nonfinite loss {loss.item()}; skipping")  
         elif loss.item() > 10.0:
@@ -79,7 +80,8 @@ def iter_(model, data, optimizer):
         else:
             try:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0, error_if_nonfinite=True)
-                optimizer.step()
+                scaler.step(optimizer)
+                scaler.update()
             except:
                 logger.warning("Nonfinite grad, skipping")
     else: 

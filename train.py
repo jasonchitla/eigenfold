@@ -39,15 +39,16 @@ def main():
     val_loader = get_loader(splits, inference_mode=False, mode='val', shuffle=False)
     optimizer = get_optimizer(model)
     scheduler = get_scheduler(optimizer)
+    scaler = torch.cuda.amp.GradScaler()
     
-    run_training(model, optimizer, scheduler, train_loader, val_loader, device, model_dir=model_dir)
+    run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=model_dir)
         
-def run_training(model, optimizer, scheduler, train_loader, val_loader, device, model_dir=None, 
+def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=None, 
                 ep=1, best_val_loss = np.inf, best_epoch = 1):
     # 100 epochs
     while ep <= 100:
         logger.info(f"Starting training epoch {ep}")
-        log = epoch(model, train_loader, optimizer=optimizer, scheduler=scheduler,
+        log = epoch(model, train_loader, optimizer=optimizer, scheduler=scheduler, scaler=scaler,
                     device=device, print_freq=500)
 
         train_loss, train_base_loss = np.nanmean(log['loss']), np.nanmean(log['base_loss'])
