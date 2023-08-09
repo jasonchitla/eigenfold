@@ -1,10 +1,10 @@
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--manifest', type=str, default='./data/pdb.dat')
-parser.add_argument('--data', type=str, default='./data/pdb')
-parser.add_argument('--outdir', type=str, default='./data/pdb_chains')
-parser.add_argument('--outcsv', type=str, default='./data/pdb_chains.csv')
+parser.add_argument('--manifest', type=str, default='./pdb.dat')
+parser.add_argument('--data', type=str, default='./raw')
+parser.add_argument('--outdir', type=str, default='./pdb_chains')
+parser.add_argument('--outcsv', type=str, default='./pdb_chains.csv')
 parser.add_argument('--num_workers', type=int, default=15)
 args = parser.parse_args()
 
