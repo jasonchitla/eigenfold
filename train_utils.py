@@ -1,5 +1,6 @@
 import torch, wandb
 import numpy as np
+from tqdm import tqdm
 from .utils import get_logger
 logger = get_logger(__name__)
 
@@ -19,7 +20,7 @@ def epoch(model, loader, optimizer=None, scheduler=None, device='cpu', print_fre
     else: model.eval()
     
     log = {'rmsd': [], 'step': [], 'loss': [], 'base_loss': []}
-    for i, data in enumerate(loader):
+    for i, data in tqdm(enumerate(loader), total=len(loader)):
         data = data.to(device)
         try:
             if data.skip:

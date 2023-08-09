@@ -87,11 +87,11 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, device, 
             logger.info(f"Saving best checkpoint {path}")
             torch.save(state, path)
 
-        # save every 10 epochs
-        if ep % 10 == 0:
-            path = os.path.join(model_dir, f'epoch_{ep}.pt')
-            logger.info(f"Saving epoch checkpoint {path}")
-            torch.save(state, path)
+        # save every 5 epochs
+        # if ep % 5 == 0:
+        #     path = os.path.join(model_dir, f'epoch_{ep}.pt')
+        #     logger.info(f"Saving epoch checkpoint {path}")
+        #     torch.save(state, path)
         
         update = {
             'train_loss': train_loss,
