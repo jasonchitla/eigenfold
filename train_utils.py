@@ -50,10 +50,17 @@ def epoch(model, loader, optimizer=None, scheduler=None, device='cpu', print_fre
                 
         if (i+1) % print_freq == 0:
             logger.info(f"Last {print_freq} iters: loss {np.mean(log['loss'][-print_freq:])} base {np.mean(log['base_loss'][-print_freq:])}")
-            try: wandb.log({
-                'iter_loss': np.mean(log['loss'][-print_freq:]),
-                'iter_base_loss': np.mean(log['base_loss'][-print_freq:])
-            })
+            try: 
+                if optimizer is not None:
+                    wandb.log({
+                        'iter_loss': np.mean(log['loss'][-print_freq:]),
+                        'iter_base_loss': np.mean(log['base_loss'][-print_freq:])
+                    })
+                else:
+                    wandb.log({
+                        'val_iter_loss': np.mean(log['loss'][-print_freq:]),
+                        'val_iter_base_loss': np.mean(log['base_loss'][-print_freq:])
+                    })
             except: pass
         
     return log
@@ -83,5 +90,5 @@ def iter_(model, data, optimizer):
         
 
 def get_optimizer(model):
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.0003)
+    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.0001)
     return optimizer
