@@ -66,7 +66,7 @@ def unpack_pdb(pdb_id):
     for chain_id in model.child_dict:
         if chain_id not in seqres: continue
         chain = model.child_dict[chain_id]
-        name = pdb_id[3:8] + chain_id + '.pdb'
+        name = pdb_id[:4] + chain_id + '.pdb'
         info = process_chain(chain, name)
         for key in ['head', 'resolution', 'deposition_date', 'release_date', 'structure_method']:
             info[key] = header.get(key, None)
