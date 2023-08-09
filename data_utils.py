@@ -50,7 +50,7 @@ class ResidueDataset(Dataset):
         edge_idx = np.stack([src, dst])
         data['resi'].edge_index = torch.tensor(edge_idx)
         data.resi_sde = data.sde = self.get_sde(row.seqlen)
-        data.path = pdb_path = os.path.join('./data/pdb_chains', row.name[:2], row.name); data.info = row
+        data.path = pdb_path = os.path.join('./pdb_chains', row.name[:2], row.name); data.info = row
         
         
         ret = pdb_to_npy(pdb_path, seqres=row.seqres)
@@ -63,7 +63,7 @@ class ResidueDataset(Dataset):
             data['resi'].pos = torch.tensor(pos[:,0]).float()
         
         embeddings_name = row.__getattr__('name' if self.inference_mode else 'reference')
-        embeddings_path = os.path.join('./embeddings-limit256', embeddings_name[:2], embeddings_name) + '.omegafold_num_recycling.4.npz'
+        embeddings_path = os.path.join('./embeddings', embeddings_name[:2], embeddings_name) + '.omegafold_num_recycling.4.npz'
         if not os.path.exists(embeddings_path):
             logger.warning(f"No LM embeddings at {embeddings_path}")
             return self.null_data(data)

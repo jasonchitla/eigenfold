@@ -18,7 +18,7 @@ def main():
     )
 
     logger.info(f'Loading splits')
-    splits = pd.read_csv('./splits/limit256.csv')
+    splits = pd.read_csv('./limit256.csv')
     try: splits = splits.set_index('path')   
     except: splits = splits.set_index('name')   
     
