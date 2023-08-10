@@ -4,44 +4,48 @@ import pandas as pd
 from score_model import ScoreModel
 from data_utils import get_loader
 from utils import get_logger, save_loss_plot
-from train_utils import get_optimizer, get_scheduler, epoch
+from train_utils import get_optimizer, epoch
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 logger = get_logger(__name__)
-
-time_id = int(time.time()*1000)
     
-def main():
+def main(config=None):
+    time_id = int(time.time()*1000)
     logger.info(f'Initializing run with ID {time_id}')
-    wandb.init(
+    with wandb.init(
         settings=wandb.Settings(start_method="fork"),
         project='harmonic-diffusion-antibodies',
-        name=str(time_id)
-    )
+        name=str(time_id),
+        config=config
+    ):
+        # this config will be set by Sweep Controller
+        config = wandb.config
 
-    logger.info(f'Loading splits')
-    splits = pd.read_csv('./limit256.csv')
-    try: splits = splits.set_index('path')   
-    except: splits = splits.set_index('name')   
-    
-    logger.info("Constructing model")
-    model = ScoreModel(embed_dims=32, num_conv_layers=6, position_embed_dims=16, tmin=0.001, tmax=1000000.0)
-    
-    total_params = sum([p.numel() for p in model.parameters()])
-    logger.info(f"Model has {total_params} params")
-    wandb.log({'total_params': total_params})
-
-    model_dir = os.path.join('./workdir', str(time_id))
-    if not os.path.exists(model_dir): os.mkdir(model_dir)
+        logger.info(f'Loading splits')
+        splits = pd.read_csv('./limit256.csv')
+        try: splits = splits.set_index('path')   
+        except: splits = splits.set_index('name')   
         
-    device = torch.device('cuda')
-    model = model.to(device)
-    
-    train_loader = get_loader(splits, inference_mode=False, mode='train', shuffle=True)
-    val_loader = get_loader(splits, inference_mode=False, mode='val', shuffle=False)
-    optimizer = get_optimizer(model)
-    scheduler = get_scheduler(optimizer)
-    scaler = torch.cuda.amp.GradScaler()
-    
-    run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=model_dir)
+        logger.info("Constructing model")
+        # divide embed_dims by 2 to get position_embed_dims
+        model = ScoreModel(embed_dims=config.embed_dims, num_conv_layers=config.num_conv_layers, position_embed_dims=config.embed_dims/2, tmin=0.001, tmax=1000000.0)
+        
+        total_params = sum([p.numel() for p in model.parameters()])
+        logger.info(f"Model has {total_params} params")
+        wandb.log({'total_params': total_params})
+
+        model_dir = os.path.join('./workdir', str(time_id))
+        if not os.path.exists(model_dir): os.mkdir(model_dir)
+            
+        device = torch.device('cuda')
+        model = model.to(device)
+        
+        train_loader = get_loader(splits, inference_mode=False, mode='train', shuffle=True)
+        val_loader = get_loader(splits, inference_mode=False, mode='val', shuffle=False)
+        optimizer = get_optimizer(model, lr=config.learning_rate)
+        scheduler = ReduceLROnPlateau(optimizer, patience=3)
+        scaler = torch.cuda.amp.GradScaler()
+        
+        run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=model_dir)
         
 def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=None, 
                 ep=1, best_val_loss = np.inf, best_epoch = 1):
@@ -111,4 +115,23 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, 
     
     
 if __name__ == '__main__':
-    main()
+    sweep_config = {
+        'method': 'random'
+    }
+    sweep_config['metric'] = {
+        'name': 'val_loss',
+        'goal': 'minimize'   
+    } 
+    sweep_config['parameters'] = {
+        'learning_rate': {
+            'values': [0.0001, 0.0002, 0.0003, 0.0004]
+        },
+        'num_conv_layers': {
+            'values': [4, 5, 6]
+        },
+        'embed_dims': {
+            'values': [16, 24, 32]
+        },
+    }
+    sweep_id = wandb.sweep(sweep_config, project="harmonic-diffusion-antibodies")
+    wandb.agent(sweep_id, main, count=5)

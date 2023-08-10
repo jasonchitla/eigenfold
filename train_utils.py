@@ -8,12 +8,6 @@ def loss_func(data):
     loss = ((data.score - data.pred)**2 / data.score_norm[:,None]**2).mean()
     base_loss = (data.score**2 / data.score_norm[:,None]**2).mean()    
     return loss, base_loss
-
-def get_scheduler(optimizer):
-    warmup = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1., end_factor=1.0, total_iters=10000)
-    constant = torch.optim.lr_scheduler.ConstantLR(optimizer, factor=1., total_iters=100000)
-    decay = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1., end_factor=1.0, total_iters=500000)
-    return torch.optim.lr_scheduler.SequentialLR(optimizer, schedulers=[warmup, constant, decay], milestones=[10000, 110000])
     
 def epoch(model, loader, optimizer=None, scheduler=None, scaler=None, device='cpu', print_freq=1000):
     if optimizer is not None: model.train()
@@ -21,6 +15,9 @@ def epoch(model, loader, optimizer=None, scheduler=None, scaler=None, device='cp
     
     log = {'rmsd': [], 'step': [], 'loss': [], 'base_loss': []}
     for i, data in tqdm(enumerate(loader), total=len(loader)):
+        # remove
+        if i >= 3052:
+            break
         data = data.to(device)
         try:
             if data.skip:
@@ -91,6 +88,6 @@ def iter_(model, data, optimizer, scaler):
     return data, loss, base_loss
         
 
-def get_optimizer(model):
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.0001)
+def get_optimizer(model, lr):
+    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=lr)
     return optimizer
