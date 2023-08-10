@@ -7,7 +7,6 @@ def preprocess():
     df = df[df.valid_alphas > 0]
     df = df[df.saved]; del df['saved']
     df = df[(df.seqlen >= 20) & (df.seqlen <= 256)]
-    df = df[df.release_date < '2020-12-01']
     df['split'] = np.where(df.release_date < '2022-01-01', 'train', 'val')
     val_mask = df['split'] == 'val'
     num_test = int(0.3 * sum(val_mask))
