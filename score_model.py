@@ -22,15 +22,16 @@ class ConvLayer(torch.nn.Module):
         self.query_transform = o3.Linear(in_tp_irreps, key_irreps)
         self.tensor_product_key = o3.FullyConnectedTensorProduct(in_tp_irreps, spherical_harmonics_irreps, key_irreps, shared_weights=False)
         fc_dim = 128
+        dropout = 0.1
         self.fc_key = nn.Sequential(
-            nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.Linear(fc_dim, fc_dim),
-            nn.GELU(), nn.Linear(fc_dim, self.tensor_product_key.weight_numel)
+            nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, fc_dim),
+            nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, self.tensor_product_key.weight_numel)
         )
         self.dot = o3.FullyConnectedTensorProduct(key_irreps, key_irreps, "0e")
 
         self.fc_value = nn.Sequential(
-            nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.Linear(fc_dim, fc_dim),
-            nn.GELU(), nn.Linear(fc_dim, self.tensor_product_value.weight_numel)
+            nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, fc_dim),
+            nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, self.tensor_product_value.weight_numel)
         )
         self.batch_norm = BatchNorm(out_irreps)
 

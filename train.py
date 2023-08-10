@@ -48,8 +48,8 @@ def main(config=None):
         
 def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=None, 
                 ep=1, best_val_loss = np.inf, best_epoch = 1):
-    # 100 epochs
-    while ep <= 100:
+    # 4 epochs
+    while ep <= 4:
         logger.info(f"Starting training epoch {ep}")
         log = epoch(model, train_loader, optimizer=optimizer, scheduler=scheduler, scaler=scaler,
                     device=device, print_freq=500)
@@ -115,7 +115,7 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, 
     
 if __name__ == '__main__':
     sweep_config = {
-        'method': 'random'
+        'method': 'grid'
     }
     sweep_config['metric'] = {
         'name': 'val_loss',
@@ -123,11 +123,11 @@ if __name__ == '__main__':
     } 
     sweep_config['parameters'] = {
         'learning_rate': {
-            'values': [0.0001, 0.0002, 0.0003, 0.0004]
+            'values': [0.0001, 0.0002]
         },
         'num_conv_layers': {
-            'values': [4, 5, 6]
+            'values': [4, 5]
         }
     }
     sweep_id = wandb.sweep(sweep_config, project="harmonic-diffusion-antibodies")
-    wandb.agent(sweep_id, main, count=5)
+    wandb.agent(sweep_id, main, count=4)
