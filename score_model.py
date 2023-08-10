@@ -23,14 +23,14 @@ class ConvLayer(torch.nn.Module):
         self.tensor_product_key = o3.FullyConnectedTensorProduct(in_tp_irreps, spherical_harmonics_irreps, key_irreps, shared_weights=False)
         fc_dim = 128
         self.fc_key = nn.Sequential(
-            nn.Linear(n_edge_features, fc_dim), nn.ReLU(), nn.Linear(fc_dim, fc_dim),
-            nn.ReLU(), nn.Linear(fc_dim, self.tensor_product_key.weight_numel)
+            nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.Linear(fc_dim, fc_dim),
+            nn.GELU(), nn.Linear(fc_dim, self.tensor_product_key.weight_numel)
         )
         self.dot = o3.FullyConnectedTensorProduct(key_irreps, key_irreps, "0e")
 
         self.fc_value = nn.Sequential(
-            nn.Linear(n_edge_features, fc_dim), nn.ReLU(), nn.Linear(fc_dim, fc_dim),
-            nn.ReLU(), nn.Linear(fc_dim, self.tensor_product_value.weight_numel)
+            nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.Linear(fc_dim, fc_dim),
+            nn.GELU(), nn.Linear(fc_dim, self.tensor_product_value.weight_numel)
         )
         self.batch_norm = BatchNorm(out_irreps)
 
@@ -82,18 +82,18 @@ class ScoreModel(torch.nn.Module):
         self.bottleneck_dims = 32
         self.node_embedding_transform = nn.Sequential(
             nn.Linear(embed_dims + node_dims, self.bottleneck_dims),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims)
         )
         edge_dims = 128
         num_gaussians = 50
         self.edge_embedding_transform = nn.Sequential(
             nn.Linear(embed_dims + num_gaussians + self.position_embed_dims + 2 * edge_dims, self.bottleneck_dims),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims)
         )
         self.node_norm = nn.LayerNorm(node_dims)
