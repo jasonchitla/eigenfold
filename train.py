@@ -4,8 +4,7 @@ import pandas as pd
 from score_model import ScoreModel
 from data_utils import get_loader
 from utils import get_logger, save_loss_plot
-from train_utils import get_optimizer, epoch
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from train_utils import get_optimizer, get_scheduler, epoch
 logger = get_logger(__name__)
     
 def main(config=None):
@@ -42,7 +41,7 @@ def main(config=None):
         train_loader = get_loader(splits, inference_mode=False, mode='train', shuffle=True)
         val_loader = get_loader(splits, inference_mode=False, mode='val', shuffle=False)
         optimizer = get_optimizer(model, lr=config.learning_rate)
-        scheduler = ReduceLROnPlateau(optimizer)
+        scheduler = get_scheduler(optimizer)
         scaler = torch.cuda.amp.GradScaler()
         
         run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=model_dir)
