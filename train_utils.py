@@ -95,5 +95,5 @@ def iter_(model, data, optimizer, scaler):
         
 
 def get_optimizer(model, lr):
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=lr)
+    optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=lr)
     return optimizer
