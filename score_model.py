@@ -21,7 +21,7 @@ class ConvLayer(torch.nn.Module):
         key_irreps = [(mul//2, ir) for mul, ir in in_tp_irreps]
         self.query_transform = o3.Linear(in_tp_irreps, key_irreps)
         self.tensor_product_key = o3.FullyConnectedTensorProduct(in_tp_irreps, spherical_harmonics_irreps, key_irreps, shared_weights=False)
-        fc_dim = 128
+        fc_dim = 64
         dropout = 0.1
         self.fc_key = nn.Sequential(
             nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, fc_dim),
@@ -79,8 +79,8 @@ class ScoreModel(torch.nn.Module):
             We use degree 2, seen here below. """
         self.spherical_harmonics_irreps = o3.Irreps.spherical_harmonics(lmax=2)
         
-        node_dims = 256
-        self.bottleneck_dims = 32
+        node_dims = 128
+        self.bottleneck_dims = 16
         self.node_embedding_transform = nn.Sequential(
             nn.Linear(embed_dims + node_dims, self.bottleneck_dims),
             nn.GELU(),
@@ -88,7 +88,7 @@ class ScoreModel(torch.nn.Module):
             nn.GELU(),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims)
         )
-        edge_dims = 128
+        edge_dims = 64
         num_gaussians = 50
         self.edge_embedding_transform = nn.Sequential(
             nn.Linear(embed_dims + num_gaussians + self.position_embed_dims + 2 * edge_dims, self.bottleneck_dims),
