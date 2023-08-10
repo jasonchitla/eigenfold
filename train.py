@@ -126,7 +126,7 @@ if __name__ == '__main__':
             'values': [0.0001]
         },
         'num_conv_layers': {
-            'values': [1, 2, 3]
+            'values': [1, 2]
         },
         'dropout': {
             'values': [0.3, 0.4]
