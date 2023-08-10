@@ -25,7 +25,7 @@ def main(config=None):
         try: splits = splits.set_index('path')   
         except: splits = splits.set_index('name')   
         
-        logger.info("Constructing model")
+        logger.info(f"Constructing model with configs: {config}")
         # divide embed_dims by 2 to get position_embed_dims
         model = ScoreModel(embed_dims=config.embed_dims, num_conv_layers=config.num_conv_layers, position_embed_dims=config.embed_dims/2, tmin=0.001, tmax=1000000.0)
         
