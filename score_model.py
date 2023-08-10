@@ -79,8 +79,8 @@ class ScoreModel(torch.nn.Module):
             We use degree 2, seen here below. """
         self.spherical_harmonics_irreps = o3.Irreps.spherical_harmonics(lmax=2)
         
-        node_dims = 128
-        self.bottleneck_dims = 16
+        node_dims = 256
+        self.bottleneck_dims = 20
         self.node_embedding_transform = nn.Sequential(
             nn.Linear(embed_dims + node_dims, self.bottleneck_dims),
             nn.GELU(),
@@ -88,7 +88,7 @@ class ScoreModel(torch.nn.Module):
             nn.GELU(),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims)
         )
-        edge_dims = 64
+        edge_dims = 128
         num_gaussians = 50
         self.edge_embedding_transform = nn.Sequential(
             nn.Linear(embed_dims + num_gaussians + self.position_embed_dims + 2 * edge_dims, self.bottleneck_dims),
