@@ -42,7 +42,7 @@ def main(config=None):
         train_loader = get_loader(splits, inference_mode=False, mode='train', shuffle=True)
         val_loader = get_loader(splits, inference_mode=False, mode='val', shuffle=False)
         optimizer = get_optimizer(model, lr=config.learning_rate)
-        scheduler = ReduceLROnPlateau(optimizer, patience=3)
+        scheduler = ReduceLROnPlateau(optimizer)
         scaler = torch.cuda.amp.GradScaler()
         
         run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=model_dir)
