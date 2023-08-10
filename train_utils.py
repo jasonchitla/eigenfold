@@ -21,9 +21,6 @@ def epoch(model, loader, optimizer=None, scheduler=None, scaler=None, device='cp
     
     log = {'rmsd': [], 'step': [], 'loss': [], 'base_loss': []}
     for i, data in tqdm(enumerate(loader), total=len(loader)):
-        # remove
-        if i >= 3052:
-            break
         data = data.to(device)
         try:
             if data.skip:
