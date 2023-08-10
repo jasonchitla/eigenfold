@@ -129,7 +129,7 @@ if __name__ == '__main__':
             'values': [1, 2, 3]
         },
         'dropout': {
-            'values': [0.25, 0.3]
+            'values': [0.3, 0.4]
         }
     }
     sweep_id = wandb.sweep(sweep_config, project="harmonic-diffusion-antibodies")
