@@ -68,7 +68,6 @@ class ScoreModel(torch.nn.Module):
     def __init__(self, embed_dims, num_conv_layers, position_embed_dims, tmin, tmax, dropout):
         super(ScoreModel, self).__init__()
 
-        self.dropout = dropout
         self.tmin = tmin
         self.tmax = tmax
         self.position_embed_dims = position_embed_dims
@@ -85,8 +84,10 @@ class ScoreModel(torch.nn.Module):
         self.node_embedding_transform = nn.Sequential(
             nn.Linear(embed_dims + node_dims, self.bottleneck_dims),
             nn.GELU(),
+            nn.Dropout(dropout),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims),
             nn.GELU(),
+            nn.Dropout(dropout),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims)
         )
         edge_dims = 128
@@ -94,8 +95,10 @@ class ScoreModel(torch.nn.Module):
         self.edge_embedding_transform = nn.Sequential(
             nn.Linear(embed_dims + num_gaussians + self.position_embed_dims + 2 * edge_dims, self.bottleneck_dims),
             nn.GELU(),
+            nn.Dropout(dropout),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims),
             nn.GELU(),
+            nn.Dropout(dropout),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims)
         )
         self.node_norm = nn.LayerNorm(node_dims)
@@ -133,7 +136,7 @@ class ScoreModel(torch.nn.Module):
                 out_tp_irreps=out_tp_irreps,
                 out_irreps=out_irreps,
                 n_edge_features=3*ns,
-                dropout=self.dropout
+                dropout=dropout
             )
             conv_layers.append(layer)
                 
