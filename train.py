@@ -26,7 +26,7 @@ def main(config=None):
         
         logger.info(f"Constructing model with configs: {config}")
         # divide embed_dims by 2 to get position_embed_dims
-        model = ScoreModel(embed_dims=32, num_conv_layers=int(config.num_conv_layers), position_embed_dims=16, tmin=0.001, tmax=1000000.0)
+        model = ScoreModel(embed_dims=32, num_conv_layers=int(config.num_conv_layers), position_embed_dims=16, tmin=0.001, tmax=1000000.0, dropout=config.dropout)
         
         total_params = sum([p.numel() for p in model.parameters()])
         logger.info(f"Model has {total_params} params")
@@ -126,7 +126,10 @@ if __name__ == '__main__':
             'values': [0.0001]
         },
         'num_conv_layers': {
-            'values': [3, 4]
+            'values': [2, 3, 4]
+        },
+        'dropout': {
+            'values': [0.2, 0.3]
         }
     }
     sweep_id = wandb.sweep(sweep_config, project="harmonic-diffusion-antibodies")

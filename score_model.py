@@ -10,7 +10,7 @@ from e3nn.nn import BatchNorm
 """ performs message passing with attention """
 class ConvLayer(torch.nn.Module):
     def __init__(self, in_irreps, in_tp_irreps, out_tp_irreps,
-                 spherical_harmonics_irreps, out_irreps, n_edge_features):
+                 spherical_harmonics_irreps, out_irreps, n_edge_features, dropout):
         super(ConvLayer, self).__init__()
         
         self.input_linear = o3.Linear(in_irreps, in_tp_irreps, internal_weights=True)
@@ -22,7 +22,7 @@ class ConvLayer(torch.nn.Module):
         self.query_transform = o3.Linear(in_tp_irreps, key_irreps)
         self.tensor_product_key = o3.FullyConnectedTensorProduct(in_tp_irreps, spherical_harmonics_irreps, key_irreps, shared_weights=False)
         fc_dim = 64
-        dropout = 0.1
+
         self.fc_key = nn.Sequential(
             nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, fc_dim),
             nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, self.tensor_product_key.weight_numel)
@@ -65,9 +65,10 @@ class ConvLayer(torch.nn.Module):
         return out
 
 class ScoreModel(torch.nn.Module):
-    def __init__(self, embed_dims, num_conv_layers, position_embed_dims, tmin, tmax):
+    def __init__(self, embed_dims, num_conv_layers, position_embed_dims, tmin, tmax, dropout):
         super(ScoreModel, self).__init__()
 
+        self.dropout = dropout
         self.tmin = tmin
         self.tmax = tmax
         self.position_embed_dims = position_embed_dims
@@ -131,7 +132,8 @@ class ScoreModel(torch.nn.Module):
                 in_tp_irreps=in_tp_irreps,
                 out_tp_irreps=out_tp_irreps,
                 out_irreps=out_irreps,
-                n_edge_features=3*ns
+                n_edge_features=3*ns,
+                dropout=self.dropout
             )
             conv_layers.append(layer)
                 
