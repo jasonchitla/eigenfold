@@ -8,30 +8,19 @@ def preprocess():
     df = df[df.saved]; del df['saved']
     df = df[(df.seqlen >= 20) & (df.seqlen <= 256)]
     df = df[df.release_date < '2020-12-01']
-    # Randomly shuffle the dataframe without resetting index
-    shuffled_df = df.sample(frac=1)
-
-    # Determine split indices based on the desired percentages
-    train_idx = int(0.8 * len(df))
-    val_idx = int(0.9 * len(df))
-
-    # Get the shuffled indices
-    shuffled_indices = shuffled_df.index.tolist()
-
-    # Assign 'train', 'val', and 'test' based on the shuffled indices
-    df.loc[shuffled_indices[:train_idx], 'split'] = 'train'
-    df.loc[shuffled_indices[train_idx:val_idx], 'split'] = 'val'
-    df.loc[shuffled_indices[val_idx:], 'split'] = 'test'
-
-    # Count the number of 'train', 'val', and 'test' entries
+    df['split'] = np.where(df.release_date < '2022-01-01', 'train', 'val')
+    val_mask = df['split'] == 'val'
+    num_test = int(0.3 * sum(val_mask))
+    val_indices = df[val_mask].index.to_numpy()
+    # Change the last num_test number of the 'val' rows to 'test'
+    df.loc[val_indices[-num_test:], 'split'] = 'test'
     train_count = (df['split'] == 'train').sum()
     val_count = (df['split'] == 'val').sum()
     test_count = (df['split'] == 'test').sum()
-
-    print(f"Train count: {train_count}")
-    print(f"Validation count: {val_count}")
-    print(f"Test count: {test_count}")
-    df.to_csv('limit256.csv')
+    print(f"train count: {train_count}")
+    print(f"val count: {val_count}")
+    print(f"test count: {test_count}")
+    df.to_csv('preprocessed.csv')
     
 if __name__ == "__main__":
     preprocess()
