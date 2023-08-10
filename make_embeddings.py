@@ -1,7 +1,7 @@
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--splits', type=str, required=True)
-parser.add_argument('--out_dir', type=str, default='./more-embeddings')
+parser.add_argument('--out_dir', type=str, default='./embeddings')
 parser.add_argument('--device', type=str, default="cuda")
 parser.add_argument('--lm_weights_path', default="release1.pt")
 parser.add_argument('--omegafold_num_recycling', type=int, default=4)
