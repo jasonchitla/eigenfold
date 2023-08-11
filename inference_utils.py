@@ -79,9 +79,9 @@ def get_schedule(args, sde, full=False):
         Hf=2,
         rmsd_max=0,
         step=args.elbo_step if full else args.inf_step,
-        cutoff=args.train_cutoff,
-        kmin=args.train_kmin,
-        tmin=args.train_tmin,
+        cutoff=5,
+        kmin=5,
+        tmin=0.01,
         alpha=0 if full else args.alpha,
         beta=1 if full else args.beta
     )
