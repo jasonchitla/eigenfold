@@ -27,7 +27,7 @@ def inference_epoch(args, model, dataset, device='cpu', rank=0, world_size=1, pd
             try:
                 pdb = PDBFile(molseq) if pdbs else None
                 data = copy.deepcopy(data_)
-                data.Y = reverse_sample(args, score_fn, sde, sched, device=device, Y=None, pdb=pdb)
+                data.Y = reverse_sample(score_fn, sde, sched, device=device, Y=None, pdb=pdb)
                 
                 data.elbo_Y = logp(data.Y, score_fn, sde, sched_full, device=device, tqdm_=False) if elbo else np.nan
                 

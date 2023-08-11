@@ -51,7 +51,7 @@ class ForwardDiffusionKernel(BaseTransform):
         data.score = score
         return data
 
-def reverse_sample(args, score_func, sde, sched, pdb=None, Y=None, device='cpu', tqdm_=True, logF=None):
+def reverse_sample(score_func, sde, sched, pdb=None, Y=None, device='cpu', tqdm_=True, logF=None):
     sde = copy.deepcopy(sde); 
     if 'cuda' in str(device): sde.cuda()
     
@@ -66,7 +66,8 @@ def reverse_sample(args, score_func, sde, sched, pdb=None, Y=None, device='cpu',
     for i in steps:
 
         t, dt, k, dk = sched.ts[i], sched.dt[i], sched.ks[i], sched.dk[i]
-        k = (sde.D * t < args.train_cutoff).sum() - 1
+        # train_cutoff = 5.0
+        k = (sde.D * t < 5.0).sum() - 1
         dk = k - kold; kold = k
         if dk:
             new_eigens = torch.zeros(sde.N, dtype=bool, device=device)
