@@ -97,7 +97,8 @@ def get_loader(splits, inference_mode=False, mode='train', shuffle=True):
         split['seqlen'] = [len(s) for s in split.seqres]
 
     # max seqlen of 1500
-    split = split[split.seqlen <= 1500]
+    max_len = 1024 if inference_mode else 1500
+    split = split[split.seqlen <= max_len]
     
     transform = ForwardDiffusionKernel()
     dataset = ResidueDataset(split=split, inference_mode=inference_mode, transform=transform)
