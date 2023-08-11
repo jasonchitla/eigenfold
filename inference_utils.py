@@ -67,7 +67,7 @@ def get_score_fn(model, data, key='resi', device='cpu'):
         data[key].node_t = torch.ones(data.resi_sde.N, device=device) * t
         data.score_norm = sde.score_norm(t, k, adj=True)
         data['sidechain'].pos = Y[data['resi'].num_nodes:]
-        return model.enn(data)
+        return model(data)
     return score_fn
 
 def get_schedule(args, sde, full=False):
