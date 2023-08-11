@@ -76,7 +76,7 @@ def get_schedule(args, sde, full=False):
         'rate': schedule.RateSchedule
     }[args.inf_type](
         sde,
-        Hf=args.train_Hf,
+        Hf=2,
         rmsd_max=0,
         step=args.elbo_step if full else args.inf_step,
         cutoff=args.train_cutoff,
