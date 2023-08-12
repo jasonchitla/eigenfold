@@ -71,7 +71,7 @@ def tmscore(X_path, Y_path, molseq=None, lddt=True, lddt_start=1):
     if not os.path.isabs(X_path): X_path = os.path.join(os.getcwd(), X_path)
     if not os.path.isabs(Y_path): Y_path = os.path.join(os.getcwd(), Y_path)
     
-    out = subprocess.check_output(['./TMscore', '-seq', Y_path, X_path], 
+    out = subprocess.check_output(['/home/ubuntu/eigenfold/TMscore', '-seq', Y_path, X_path], 
                     stderr=open('/dev/null', 'w'), cwd=my_dir)
     start = out.find(b'RMSD')
     end = out.find(b'rotation')
@@ -87,7 +87,7 @@ def tmscore(X_path, Y_path, molseq=None, lddt=True, lddt_start=1):
     if lddt:
         X_renum = os.path.join(my_dir, 'X_renum.pdb')
         renumber_pdb(molseq, X_path, X_renum, start=lddt_start)
-        out = subprocess.check_output(['./lddt', '-c', Y_path, X_renum],  # reference comes last
+        out = subprocess.check_output(['/home/ubuntu/eigenfold/lddt', '-c', Y_path, X_renum],  # reference comes last
             stderr=open('/dev/null', 'w'), cwd=my_dir)
         for line in out.split(b'\n'):
             if b'Global LDDT score' in line:
