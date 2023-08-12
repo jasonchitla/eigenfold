@@ -21,7 +21,7 @@ class ConvLayer(torch.nn.Module):
         key_irreps = [(mul//2, ir) for mul, ir in in_tp_irreps]
         self.query_transform = o3.Linear(in_tp_irreps, key_irreps)
         self.tensor_product_key = o3.FullyConnectedTensorProduct(in_tp_irreps, spherical_harmonics_irreps, key_irreps, shared_weights=False)
-        fc_dim = 64
+        fc_dim = 128
 
         self.fc_key = nn.Sequential(
             nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, fc_dim),

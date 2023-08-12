@@ -4,7 +4,8 @@ import pandas as pd
 from score_model import ScoreModel
 from data_utils import get_loader
 from utils import get_logger, save_loss_plot
-from train_utils import get_optimizer, get_scheduler, epoch
+from train_utils import get_optimizer, epoch
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 logger = get_logger(__name__)
     
 def main(config=None):
@@ -41,7 +42,7 @@ def main(config=None):
         train_loader = get_loader(splits, inference_mode=False, mode='train', shuffle=True)
         val_loader = get_loader(splits, inference_mode=False, mode='val', shuffle=False)
         optimizer = get_optimizer(model, lr=config.learning_rate)
-        scheduler = get_scheduler(optimizer)
+        scheduler = ReduceLROnPlateau(optimizer, factor=0.5, patience=2)
         scaler = torch.cuda.amp.GradScaler()
         
         run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=model_dir)
@@ -126,11 +127,11 @@ if __name__ == '__main__':
             'values': [0.0001]
         },
         'num_conv_layers': {
-            'values': [1, 2]
+            'values': [3, 4]
         },
         'dropout': {
-            'values': [0.5, 0.6]
+            'values': [0.5]
         }
     }
     sweep_id = wandb.sweep(sweep_config, project="harmonic-diffusion-antibodies")
-    wandb.agent(sweep_id, main, count=1)
+    wandb.agent(sweep_id, main, count=2)
