@@ -103,7 +103,7 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, 
             'train_base_loss': train_base_loss,
             'val_loss': val_loss,
             'val_base_loss': val_base_loss,
-            'current_lr': scheduler.get_last_lr()[0],
+            'current_lr': optimizer.param_groups[0]['lr'],
             'epoch': ep
         }
         logger.info(str(update))
@@ -124,14 +124,14 @@ if __name__ == '__main__':
     } 
     sweep_config['parameters'] = {
         'learning_rate': {
-            'values': [0.0001]
+            'values': [0.0001, 0.0003]
         },
         'num_conv_layers': {
-            'values': [3, 4]
+            'values': [4, 5]
         },
         'dropout': {
-            'values': [0.5]
+            'values': [0.5, 0.6]
         }
     }
     sweep_id = wandb.sweep(sweep_config, project="harmonic-diffusion-antibodies")
-    wandb.agent(sweep_id, main, count=2)
+    wandb.agent(sweep_id, main, count=6)
