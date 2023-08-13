@@ -21,6 +21,7 @@ def epoch(model, loader, optimizer=None, scheduler=None, scaler=None, device='cp
                 logger.warning(f"Skipping batch")
                 continue
             data, loss, base_loss = iter_(model, data, optimizer, scaler)
+            if scheduler is not None: scheduler.step()
             
             with torch.no_grad():
                 log['rmsd'].append(float(data.rmsd.cpu().numpy()))
