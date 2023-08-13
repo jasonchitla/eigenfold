@@ -107,6 +107,7 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, 
             'epoch': ep
         }
         logger.info(str(update))
+        logger.info(f"scheduler get_lr(): {scheduler.get_lr()}")
         wandb.log(update)
             
         ep += 1
