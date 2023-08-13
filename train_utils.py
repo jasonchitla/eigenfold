@@ -55,7 +55,6 @@ def epoch(model, loader, optimizer=None, scheduler=None, scaler=None, device='cp
                         'val_iter_base_loss': np.mean(log['base_loss'][-print_freq:])
                     })
             except: pass
-    if optimizer is None and scheduler is not None: scheduler.step()
         
     return log
 

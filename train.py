@@ -42,7 +42,7 @@ def main(config=None):
         train_loader = get_loader(splits, inference_mode=False, mode='train', shuffle=True)
         val_loader = get_loader(splits, inference_mode=False, mode='val', shuffle=False)
         optimizer = get_optimizer(model, lr=config.learning_rate)
-        scheduler = ExponentialLR(optimizer, gamma=0.7)
+        scheduler = ExponentialLR(optimizer, gamma=0.65)
         scaler = torch.cuda.amp.GradScaler()
         
         run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=model_dir)
@@ -60,6 +60,7 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, 
         
         logger.info(f"Starting validation epoch {ep}")
         log = epoch(model, val_loader, device=device, print_freq=500)
+        scheduler.step()
         
         val_loss, val_base_loss = np.nanmean(log['loss']), np.nanmean(log['base_loss'])
         logger.info(f"Val epoch {ep}: len {len(log['loss'])} loss {val_loss}  base loss {val_base_loss}")
@@ -107,7 +108,6 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, 
             'epoch': ep
         }
         logger.info(str(update))
-        logger.info(f"scheduler get_lr(): {scheduler.get_lr()}")
         wandb.log(update)
             
         ep += 1
@@ -125,13 +125,13 @@ if __name__ == '__main__':
     } 
     sweep_config['parameters'] = {
         'learning_rate': {
-            'values': [0.0001, 0.0003]
+            'values': [0.0003]
         },
         'num_conv_layers': {
             'values': [6]
         },
         'dropout': {
-            'values': [0.55, 0.6]
+            'values': [0.4]
         }
     }
     sweep_id = wandb.sweep(sweep_config, project="harmonic-diffusion-antibodies")
