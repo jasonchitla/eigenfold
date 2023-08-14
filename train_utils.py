@@ -9,6 +9,12 @@ def loss_func(data):
     base_loss = (data.score**2 / data.score_norm[:,None]**2).mean()    
     return loss, base_loss
 
+def get_scheduler(optimizer):
+    warmup = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1., end_factor=1.0, total_iters=10000)
+    constant = torch.optim.lr_scheduler.ConstantLR(optimizer, factor=1., total_iters=100000)
+    decay = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1., end_factor=1.0, total_iters=500000)
+    return torch.optim.lr_scheduler.SequentialLR(optimizer, schedulers=[warmup, constant, decay], milestones=[10000, 110000])
+
 def epoch(model, loader, optimizer=None, scheduler=None, scaler=None, device='cpu', print_freq=1000):
     if optimizer is not None: model.train()
     else: model.eval()
@@ -21,7 +27,7 @@ def epoch(model, loader, optimizer=None, scheduler=None, scaler=None, device='cp
                 logger.warning(f"Skipping batch")
                 continue
             data, loss, base_loss = iter_(model, data, optimizer, scaler)
-            if scheduler is not None: scheduler.step()
+            if scheduler: scheduler.step()
             
             with torch.no_grad():
                 log['rmsd'].append(float(data.rmsd.cpu().numpy()))

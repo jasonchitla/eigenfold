@@ -4,8 +4,7 @@ import pandas as pd
 from score_model import ScoreModel
 from data_utils import get_loader
 from utils import get_logger, save_loss_plot
-from train_utils import get_optimizer, epoch
-from torch.optim.lr_scheduler import CyclicLR
+from train_utils import get_optimizer, get_scheduler, epoch
 logger = get_logger(__name__)
     
 def main(config=None):
@@ -42,7 +41,7 @@ def main(config=None):
         train_loader = get_loader(splits, inference_mode=False, mode='train', shuffle=True)
         val_loader = get_loader(splits, inference_mode=False, mode='val', shuffle=False)
         optimizer = get_optimizer(model, lr=config.learning_rate)
-        scheduler = CyclicLR(optimizer, base_lr=0.01, max_lr=0.1)
+        scheduler = get_scheduler(optimizer=optimizer)
         scaler = torch.cuda.amp.GradScaler()
         
         run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=model_dir)
@@ -50,7 +49,7 @@ def main(config=None):
 def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=None, 
                 ep=1, best_val_loss = np.inf, best_epoch = 1):
     # 4 epochs
-    while ep <= 10:
+    while ep <= 15:
         logger.info(f"Starting training epoch {ep}")
         log = epoch(model, train_loader, optimizer=optimizer, scheduler=scheduler, scaler=scaler,
                     device=device, print_freq=500)
@@ -124,13 +123,13 @@ if __name__ == '__main__':
     } 
     sweep_config['parameters'] = {
         'learning_rate': {
-            'values': [0.0002]
+            'values': [0.0003]
         },
         'num_conv_layers': {
             'values': [5]
         },
         'dropout': {
-            'values': [0.5]
+            'values': [0.3]
         }
     }
     sweep_id = wandb.sweep(sweep_config, project="harmonic-diffusion-antibodies")
