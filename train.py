@@ -4,7 +4,8 @@ import pandas as pd
 from score_model import ScoreModel
 from data_utils import get_loader
 from utils import get_logger, save_loss_plot
-from train_utils import get_optimizer, get_scheduler, epoch
+from train_utils import get_optimizer, epoch
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 logger = get_logger(__name__)
     
 def main(config=None):
@@ -41,7 +42,7 @@ def main(config=None):
         train_loader = get_loader(splits, inference_mode=False, mode='train', shuffle=True)
         val_loader = get_loader(splits, inference_mode=False, mode='val', shuffle=False)
         optimizer = get_optimizer(model, lr=config.learning_rate)
-        scheduler = get_scheduler(optimizer=optimizer)
+        scheduler = ReduceLROnPlateau(optimizer=optimizer, factor=0.4, patience=3, min_lr=0.0000001)
         scaler = torch.cuda.amp.GradScaler()
         
         run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=model_dir)
@@ -49,9 +50,9 @@ def main(config=None):
 def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=None, 
                 ep=1, best_val_loss = np.inf, best_epoch = 1):
     # 4 epochs
-    while ep <= 15:
+    while ep <= 30:
         logger.info(f"Starting training epoch {ep}")
-        log = epoch(model, train_loader, optimizer=optimizer, scheduler=scheduler, scaler=scaler,
+        log = epoch(model, train_loader, optimizer=optimizer, scaler=scaler,
                     device=device, print_freq=500)
 
         train_loss, train_base_loss = np.nanmean(log['loss']), np.nanmean(log['base_loss'])
@@ -61,6 +62,7 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, 
         log = epoch(model, val_loader, device=device, print_freq=500)
         
         val_loss, val_base_loss = np.nanmean(log['loss']), np.nanmean(log['base_loss'])
+        scheduler.step(val_loss)
         logger.info(f"Val epoch {ep}: len {len(log['loss'])} loss {val_loss}  base loss {val_base_loss}")
 
         # save val loss plot
@@ -91,18 +93,18 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, 
             logger.info(f"Saving best checkpoint {path}")
             torch.save(state, path)
 
-        # save every 5 epochs
-        # if ep % 5 == 0:
-        #     path = os.path.join(model_dir, f'epoch_{ep}.pt')
-        #     logger.info(f"Saving epoch checkpoint {path}")
-        #     torch.save(state, path)
+        # save every 3 epochs
+        if ep % 3 == 0:
+            path = os.path.join(model_dir, f'epoch_{ep}.pt')
+            logger.info(f"Saving epoch checkpoint {path}")
+            torch.save(state, path)
         
         update = {
             'train_loss': train_loss,
             'train_base_loss': train_base_loss,
             'val_loss': val_loss,
             'val_base_loss': val_base_loss,
-            'current_lr': scheduler.get_last_lr()[0],
+            'current_lr': optimizer.param_groups[0]['lr'],
             'epoch': ep
         }
         logger.info(str(update))
