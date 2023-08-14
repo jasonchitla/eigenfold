@@ -4,6 +4,7 @@ import logging, socket
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter1d
+from collections import defaultdict
 
 def sinusoidal_embedding(timesteps, embedding_dim, max_positions=10000):
     """ from https://github.com/hojonathanho/diffusion/blob/master/diffusion_tf/nn.py   """
@@ -60,3 +61,16 @@ def save_loss_plot(log, path):
     plt.ylim(bottom=0)
     plt.savefig(path)
     plt.clf()
+
+class ActivationStats(torch.nn.Module):
+    def __init__(self):
+        super(ActivationStats, self).__init__()
+        self.stats = defaultdict(lambda: {"means": [], "stds": []})
+
+    def hook_fn(self, module, input, output):
+        if not module.training:
+            self.stats[module]["means"].append(output.data.mean().cpu())
+            self.stats[module]["stds"].append(output.data.std().cpu())
+
+    def register_to(self, module):
+        module.register_forward_hook(self.hook_fn)

@@ -6,7 +6,7 @@ from torch_scatter import scatter, scatter_max
 from utils import sinusoidal_embedding, GaussianSmearing
 from e3nn import o3
 from e3nn.nn import BatchNorm
-from utils import get_logger
+from utils import get_logger, ActivationStats
 logger = get_logger(__name__)
 
 """ performs message passing with attention """
@@ -162,11 +162,9 @@ class ScoreModel(torch.nn.Module):
                 
         self.conv_layers = nn.ModuleList(conv_layers)
 
-        self.hooks = []
-        # Attaching hooks to all conv_layers
+        self.activation_stats = ActivationStats()
         for layer in self.conv_layers:
-            hook = layer.register_forward_hook(hook_fn)
-            self.hooks.append(hook)
+            self.activation_stats.register_to(layer)
 
         # need paths that lead to irreps specified in 1x1o + 1x1e
         self.final_tensor_product = o3.FullyConnectedTensorProduct(out_irreps, out_irreps, '1x1o + 1x1e', internal_weights=True)
@@ -216,10 +214,3 @@ class ScoreModel(torch.nn.Module):
 
         edge_spherical_harmonics = o3.spherical_harmonics(self.spherical_harmonics_irreps, edge_vec, normalize=True, normalization='component').float()
         return node_data, edge_index, edge_data, edge_spherical_harmonics
-
-def hook_fn(m, i, o):
-    if not m.training:
-        o = o.float()
-        res = {'mean': o.mean().item(), 'std': o.std().item(),
-                'near_zero': (o<=0.05).long().sum().item()/o.numel()}
-        logger.info(f'{res}')

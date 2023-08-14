@@ -63,6 +63,12 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, 
         
         val_loss, val_base_loss = np.nanmean(log['loss']), np.nanmean(log['base_loss'])
         scheduler.step()
+
+        for layer, data in model.activation_stats.stats.items():
+            print(f"Layer: {layer._get_name()}")
+            print("Mean of means:", torch.tensor(data["means"]).mean())
+            print("Mean of stds:", torch.tensor(data["stds"]).mean())
+
         logger.info(f"Val epoch {ep}: len {len(log['loss'])} loss {val_loss}  base loss {val_base_loss}")
 
         # save val loss plot
