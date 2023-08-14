@@ -24,14 +24,14 @@ class ConvLayer(torch.nn.Module):
         fc_dim = 32
 
         self.fc_key = nn.Sequential(
-            nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, fc_dim),
-            nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, self.tensor_product_key.weight_numel)
+            nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.LayerNorm(fc_dim), nn.Dropout(dropout), nn.Linear(fc_dim, fc_dim),
+            nn.GELU(), nn.LayerNorm(fc_dim), nn.Dropout(dropout), nn.Linear(fc_dim, self.tensor_product_key.weight_numel)
         )
         self.dot = o3.FullyConnectedTensorProduct(key_irreps, key_irreps, "0e")
 
         self.fc_value = nn.Sequential(
-            nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, fc_dim),
-            nn.GELU(), nn.Dropout(dropout), nn.Linear(fc_dim, self.tensor_product_value.weight_numel)
+            nn.Linear(n_edge_features, fc_dim), nn.GELU(), nn.LayerNorm(fc_dim), nn.Dropout(dropout), nn.Linear(fc_dim, fc_dim),
+            nn.GELU(), nn.LayerNorm(fc_dim), nn.Dropout(dropout), nn.Linear(fc_dim, self.tensor_product_value.weight_numel)
         )
         self.batch_norm = BatchNorm(out_irreps)
 
@@ -84,9 +84,11 @@ class ScoreModel(torch.nn.Module):
         self.node_embedding_transform = nn.Sequential(
             nn.Linear(embed_dims + node_dims, self.bottleneck_dims),
             nn.GELU(),
+            nn.LayerNorm(self.bottleneck_dims),
             nn.Dropout(dropout),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims),
             nn.GELU(),
+            nn.LayerNorm(self.bottleneck_dims),
             nn.Dropout(dropout),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims)
         )
@@ -95,9 +97,11 @@ class ScoreModel(torch.nn.Module):
         self.edge_embedding_transform = nn.Sequential(
             nn.Linear(embed_dims + num_gaussians + self.position_embed_dims + 2 * edge_dims, self.bottleneck_dims),
             nn.GELU(),
+            nn.LayerNorm(self.bottleneck_dims),
             nn.Dropout(dropout),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims),
             nn.GELU(),
+            nn.LayerNorm(self.bottleneck_dims),
             nn.Dropout(dropout),
             nn.Linear(self.bottleneck_dims, self.bottleneck_dims)
         )

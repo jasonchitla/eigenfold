@@ -76,6 +76,7 @@ def iter_(model, data, optimizer, scaler):
                 scaler.step(optimizer)
                 scaler.update()
             except:
+                print_grads(model=model)
                 logger.warning("Nonfinite grad, skipping")
     else: 
         with torch.no_grad():
@@ -87,3 +88,11 @@ def iter_(model, data, optimizer, scaler):
 def get_optimizer(model, lr):
     optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=lr)
     return optimizer
+
+def print_grads(model):
+    for name, param in model.named_parameters():
+        if param.grad is not None:
+            max_val = torch.max(param.grad).item()
+            min_val = torch.min(param.grad).item()
+            if torch.isnan(param.grad).any() or torch.isinf(param.grad).any():
+                print(f"{name}: Min Gradient: {min_val}, Max Gradient: {max_val}")

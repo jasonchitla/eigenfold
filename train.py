@@ -5,7 +5,7 @@ from score_model import ScoreModel
 from data_utils import get_loader
 from utils import get_logger, save_loss_plot
 from train_utils import get_optimizer, epoch
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import StepLR
 logger = get_logger(__name__)
     
 def main(config=None):
@@ -42,7 +42,7 @@ def main(config=None):
         train_loader = get_loader(splits, inference_mode=False, mode='train', shuffle=True)
         val_loader = get_loader(splits, inference_mode=False, mode='val', shuffle=False)
         optimizer = get_optimizer(model, lr=config.learning_rate)
-        scheduler = ReduceLROnPlateau(optimizer=optimizer, factor=0.4, patience=3, min_lr=0.0000001)
+        scheduler = StepLR(optimizer=optimizer, step_size=2, gamma = 0.5)
         scaler = torch.cuda.amp.GradScaler()
         
         run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=model_dir)
@@ -62,7 +62,7 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, 
         log = epoch(model, val_loader, device=device, print_freq=500)
         
         val_loss, val_base_loss = np.nanmean(log['loss']), np.nanmean(log['base_loss'])
-        scheduler.step(val_loss)
+        scheduler.step()
         logger.info(f"Val epoch {ep}: len {len(log['loss'])} loss {val_loss}  base loss {val_base_loss}")
 
         # save val loss plot
@@ -104,7 +104,7 @@ def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, 
             'train_base_loss': train_base_loss,
             'val_loss': val_loss,
             'val_base_loss': val_base_loss,
-            'current_lr': optimizer.param_groups[0]['lr'],
+            'current_lr': scheduler.get_last_lr()[0],
             'epoch': ep
         }
         logger.info(str(update))
@@ -125,13 +125,13 @@ if __name__ == '__main__':
     } 
     sweep_config['parameters'] = {
         'learning_rate': {
-            'values': [0.0003]
+            'values': [0.0002]
         },
         'num_conv_layers': {
             'values': [5]
         },
         'dropout': {
-            'values': [0.5]
+            'values': [0.45]
         }
     }
     sweep_id = wandb.sweep(sweep_config, project="harmonic-diffusion-antibodies")
