@@ -163,8 +163,10 @@ class ScoreModel(torch.nn.Module):
         self.conv_layers = nn.ModuleList(conv_layers)
 
         self.activation_stats = ActivationStats()
-        for layer in self.conv_layers:
-            self.activation_stats.register_to(layer)
+        for conv_layer in self.conv_layers:
+            for name, submodule in conv_layer.named_children():
+                if isinstance(submodule, nn.Sequential):
+                    self.activation_stats.register_to(submodule)
 
         # need paths that lead to irreps specified in 1x1o + 1x1e
         self.final_tensor_product = o3.FullyConnectedTensorProduct(out_irreps, out_irreps, '1x1o + 1x1e', internal_weights=True)

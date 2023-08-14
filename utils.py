@@ -73,4 +73,8 @@ class ActivationStats(torch.nn.Module):
             self.stats[module]["stds"].append(output.data.std().cpu())
 
     def register_to(self, module):
-        module.register_forward_hook(self.hook_fn)
+        if isinstance(module, torch.nn.Sequential):
+            for sub_module in module:
+                sub_module.register_forward_hook(self.hook_fn)
+        else:
+            module.register_forward_hook(self.hook_fn)
