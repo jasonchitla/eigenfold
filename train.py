@@ -21,7 +21,7 @@ def main(config=None):
         config = wandb.config
 
         logger.info(f'Loading splits')
-        splits = pd.read_csv('./preprocessed.csv')
+        splits = pd.read_csv('./preprocessed_version2.csv')
         try: splits = splits.set_index('path')   
         except: splits = splits.set_index('name')   
         
