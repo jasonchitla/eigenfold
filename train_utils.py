@@ -96,3 +96,5 @@ def print_grads(model):
             min_val = torch.min(param.grad).item()
             if torch.isnan(param.grad).any() or torch.isinf(param.grad).any():
                 print(f"{name}: Min Gradient: {min_val}, Max Gradient: {max_val}")
+        else:
+            print(f"{name} grad: is None")

@@ -21,7 +21,7 @@ def main(config=None):
         config = wandb.config
 
         logger.info(f'Loading splits')
-        splits = pd.read_csv('./preprocessed_version2.csv')
+        splits = pd.read_csv('./preprocessed.csv')
         try: splits = splits.set_index('path')   
         except: splits = splits.set_index('name')   
         
@@ -142,4 +142,4 @@ if __name__ == '__main__':
         }
     }
     sweep_id = wandb.sweep(sweep_config, project="harmonic-diffusion-antibodies")
-    wandb.agent(sweep_id, main, count=2)
+    wandb.agent(sweep_id, main, count=1)
