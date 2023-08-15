@@ -8,9 +8,9 @@ def preprocess():
     df = df[df.valid_alphas > 0]
     df = df[df.saved]; del df['saved']
     df = df[(df.seqlen >= 20) & (df.seqlen <= 256)]
-    df = df[df.release_date < '2022-11-01']
+    df = df[df.release_date < '2020-12-01']
     df = df[df['head'] != 'immune system']
-    df['split'] = np.where(df.release_date < '2021-12-01', 'train', 'val')
+    df['split'] = np.where(df.release_date < '2020-06-01', 'train', 'val')
     train_count = (df['split'] == 'train').sum()
     val_count = (df['split'] == 'val').sum()
     print(f"train count: {train_count}")
