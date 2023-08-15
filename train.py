@@ -42,14 +42,14 @@ def main(config=None):
         train_loader = get_loader(splits, inference_mode=False, mode='train', shuffle=True)
         val_loader = get_loader(splits, inference_mode=False, mode='val', shuffle=False)
         optimizer = get_optimizer(model, lr=config.learning_rate)
-        scheduler = StepLR(optimizer=optimizer, step_size=3, gamma = 0.5)
+        scheduler = StepLR(optimizer=optimizer, step_size=4, gamma = 0.3)
         scaler = torch.cuda.amp.GradScaler()
         
         run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=model_dir)
         
 def run_training(model, optimizer, scheduler, train_loader, val_loader, scaler, device, model_dir=None, 
                 ep=1, best_val_loss = np.inf, best_epoch = 1):
-    while ep <= 20:
+    while ep <= 8:
         logger.info(f"Starting training epoch {ep}")
         log = epoch(model, train_loader, optimizer=optimizer, scaler=scaler,
                     device=device, print_freq=500)
@@ -132,13 +132,13 @@ if __name__ == '__main__':
     } 
     sweep_config['parameters'] = {
         'learning_rate': {
-            'values': [0.0003]
+            'values': [0.0001]
         },
         'num_conv_layers': {
-            'values': [5, 6]
+            'values': [3]
         },
         'dropout': {
-            'values': [0.2]
+            'values': [0.3]
         }
     }
     sweep_id = wandb.sweep(sweep_config, project="harmonic-diffusion-antibodies")
