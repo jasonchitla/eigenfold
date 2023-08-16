@@ -60,16 +60,16 @@ def inference_epoch(args, model, dataset, device='cpu', rank=0, world_size=1, pd
             except Exception as e:
                 if type(e) is KeyboardInterrupt: raise e
                 logger.error('Skipping inference mol due to exception ' + str(e))
-                raise e
-            
-        log_for_best_samples['path'].append(best_sample.path)
-        log_for_best_samples['copy'].append(best_sample.copy)
-        log_for_best_samples['elbo_Y'].append(best_sample.elbo_Y)
-        log_for_best_samples['rmsd'].append(best_sample.rmsd)
-        log_for_best_samples['gdt_ts'].append(best_sample.gdt_ts)
-        log_for_best_samples['gdt_ha'].append(best_sample.gdt_ha)
-        log_for_best_samples['tm'].append(best_sample.tm)
-        log_for_best_samples['lddt'].append(best_sample.lddt)
+        
+        if best_sample is not None:
+            log_for_best_samples['path'].append(best_sample.path)
+            log_for_best_samples['copy'].append(best_sample.copy)
+            log_for_best_samples['elbo_Y'].append(best_sample.elbo_Y)
+            log_for_best_samples['rmsd'].append(best_sample.rmsd)
+            log_for_best_samples['gdt_ts'].append(best_sample.gdt_ts)
+            log_for_best_samples['gdt_ha'].append(best_sample.gdt_ha)
+            log_for_best_samples['tm'].append(best_sample.tm)
+            log_for_best_samples['lddt'].append(best_sample.lddt)
 
         best_means_so_far = {key: np.mean(log_for_best_samples[key]) for key in log_for_best_samples if key != 'path'}
         logger.info(f"Best samples running stats: len {len(log_for_best_samples['rmsd'])} MEANS {best_means_so_far}")
