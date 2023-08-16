@@ -48,7 +48,7 @@ def inference_epoch(args, model, dataset, device='cpu', rank=0, world_size=1, pd
                 if pdb: data.pdb = pdb
                 if os.path.exists(data.path):
                     res = tmscore(data.path, data.Y, molseq)
-                    if best_sample is None or res['rmsd'] > best_sample.rmsd:
+                    if best_sample is None or res['rmsd'] < best_sample.rmsd:
                         best_sample = data
                 else:
                     res = {'rmsd': np.nan, 'gdt_ts': np.nan, 'gdt_ha': np.nan, 'tm': np.nan, 'lddt': np.nan}
