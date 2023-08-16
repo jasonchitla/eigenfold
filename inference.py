@@ -53,10 +53,12 @@ def main():
     ep = state_dict['epoch']
     
     val_loader = get_loader(splits, inference_mode=True, mode='val', shuffle=False)
-    samples, log = inference_epoch(args, model, val_loader.dataset, device=device, pdbs=True, elbo=args.elbo)
+    samples, log, log_for_best_samples = inference_epoch(args, model, val_loader.dataset, device=device, pdbs=True, elbo=args.elbo)
     
     means = {key: np.mean(log[key]) for key in log if key != 'path'}
     logger.info(f"Inference epoch {ep}: len {len(log['rmsd'])} MEANS {means}")
+    best_means = {key: np.mean(log_for_best_samples[key]) for key in log_for_best_samples if key != 'path'}
+    logger.info(f"Best samples stats: len {len(log_for_best_samples['rmsd'])} MEANS {best_means}")
     
     inf_name = f"{args.splits.split('/')[-1]}.ep{ep}.num{args.num_samples}.step{args.inf_step}.alpha{args.alpha}.beta{args.beta}"
     if args.inf_step != args.elbo_step: inf_name += f".elbo{args.elbo_step}"

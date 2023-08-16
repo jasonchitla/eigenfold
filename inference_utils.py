@@ -13,6 +13,17 @@ def inference_epoch(args, model, dataset, device='cpu', rank=0, world_size=1, pd
     num_samples = args.num_samples
     datas = []
 
+    log_for_best_samples = {
+        'path': [],
+        'copy': [],
+        'elbo_Y': [],
+        'rmsd': [],
+        'gdt_ts': [],
+        'gdt_ha': [],
+        'tm': [],
+        'lddt': []
+    }
+
     for i in range(rank, N, world_size):
         data_ = dataset.get(i)
         sde = data_.sde
@@ -22,6 +33,9 @@ def inference_epoch(args, model, dataset, device='cpu', rank=0, world_size=1, pd
         sched = get_schedule(args, data_.resi_sde)
         sched_full = get_schedule(args, data_.resi_sde, full=True)
         score_fn = get_score_fn(model, data_, key='resi', device=device)
+
+        # based on rmsd
+        best_sample = None
         
         for j in range(num_samples):        
             try:
@@ -34,6 +48,8 @@ def inference_epoch(args, model, dataset, device='cpu', rank=0, world_size=1, pd
                 if pdb: data.pdb = pdb
                 if os.path.exists(data.path):
                     res = tmscore(data.path, data.Y, molseq)
+                    if best_sample is None or res.rmsd > best_sample.rmsd:
+                        best_sample = data
                 else:
                     res = {'rmsd': np.nan, 'gdt_ts': np.nan, 'gdt_ha': np.nan, 'tm': np.nan, 'lddt': np.nan}
                 
@@ -45,6 +61,18 @@ def inference_epoch(args, model, dataset, device='cpu', rank=0, world_size=1, pd
                 if type(e) is KeyboardInterrupt: raise e
                 logger.error('Skipping inference mol due to exception ' + str(e))
                 raise e
+            
+        log_for_best_samples['path'].append(best_sample.path)
+        log_for_best_samples['copy'].append(best_sample.copy)
+        log_for_best_samples['elbo_Y'].append(best_sample.elbo_Y)
+        log_for_best_samples['rmsd'].append(best_sample.rmsd)
+        log_for_best_samples['gdt_ts'].append(best_sample.gdt_ts)
+        log_for_best_samples['gdt_ha'].append(best_sample.gdt_ha)
+        log_for_best_samples['tm'].append(best_sample.tm)
+        log_for_best_samples['lddt'].append(best_sample.lddt)
+
+        best_means_so_far = {key: np.mean(log_for_best_samples[key]) for key in log_for_best_samples if key != 'path'}
+        logger.info(f"Best samples running stats: len {len(log_for_best_samples['rmsd'])} MEANS {best_means_so_far}")
                 
     log = {
         'path': [data.path for data in datas],
@@ -57,7 +85,7 @@ def inference_epoch(args, model, dataset, device='cpu', rank=0, world_size=1, pd
         'lddt': [data.lddt for data in datas]
     }
         
-    return datas, log
+    return datas, log, log_for_best_samples
 
 def get_score_fn(model, data, key='resi', device='cpu'):
     data = copy.deepcopy(data); data.to(device); sde = data.sde
