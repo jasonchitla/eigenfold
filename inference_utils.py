@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 
 def inference_epoch(args, model, dataset, device='cpu', rank=0, world_size=1, pdbs=False, elbo=None):
     model.eval()
-    N = min(len(dataset), args.inf_mols)
+    N = 200
     num_samples = args.num_samples
     datas = []
 

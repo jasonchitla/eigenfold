@@ -64,6 +64,7 @@ def main():
     if args.inf_step != args.elbo_step: inf_name += f".elbo{args.elbo_step}"
     csv_path = os.path.join(args.model_dir, f'{inf_name}.csv')
     pd.DataFrame(log).set_index('path').to_csv(csv_path)
+    pd.DataFrame(log_for_best_samples).set_index('path').to_csv('log_for_best_samples.csv')
     logger.info(f"Saved inf csv {csv_path}")
     
     if not os.path.exists(os.path.join(args.model_dir, inf_name)): os.mkdir(os.path.join(args.model_dir, inf_name))
